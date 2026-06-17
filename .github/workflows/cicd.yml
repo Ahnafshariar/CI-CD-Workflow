@@ -15,7 +15,7 @@ jobs:
   # Runs the app's tests, saves the output to a file, uploads it.
   # ─────────────────────────────────────────────────────────────
   test:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -48,7 +48,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────
   deploy:
     needs: test                 # dependency: deploy only runs if test succeeds
-    runs-on: self-hosted   # the 'ostad' label targets your runner
+    runs-on: self-hosted  # the 'ostad' label targets your runner
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -65,5 +65,5 @@ jobs:
 
       - name: Deploy the application (PM2)
         run: |
-          chmod +x deploy.sh
-          ./deploy.sh
+          chmod +x run.sh
+          ./run.sh
