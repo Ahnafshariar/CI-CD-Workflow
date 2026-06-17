@@ -1,16 +1,23 @@
-name: Node.js CI/CD Pipeline
+name: CI/CD Pipeline
 
+# Run on every push to main, and allow manual runs from the Actions tab.
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
+  # ─────────────────────────────────────────────────────────────
+  # JOB 1 — TEST  (runs on a GitHub-hosted runner)
+  # Runs the app's tests, saves the output to a file, uploads it.
+  # ─────────────────────────────────────────────────────────────
   test:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Node.js
@@ -22,37 +29,41 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests and capture results
+      - name: Run tests and capture results to a file
         run: |
-          npm test > test-results.txt 2>&1
+          set -o pipefail
+          npm run check 2>&1 | tee test-results.txt
 
-      - name: Upload test results artifact
+      - name: Upload test results as an artifact
+        if: always()            # upload even if a test failed, so the result is always recorded
         uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: test-results.txt
+          retention-days: 7
 
+  # ─────────────────────────────────────────────────────────────
+  # JOB 2 — DEPLOY  (runs on YOUR self-hosted runner)
+  # Waits for test, pulls the artifact, prints it, then deploys.
+  # ─────────────────────────────────────────────────────────────
   deploy:
-    needs: test
-    runs-on: [self-hosted, nodejs]
-
+    needs: test                 # dependency: deploy only runs if test succeeds
+    runs-on: [self-hosted, ostad]   # the 'ostad' label targets your runner
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download test results artifact
+      - name: Download the test-results artifact
         uses: actions/download-artifact@v4
         with:
           name: test-results
 
-      - name: Display test results
-        run: cat test-results.txt
-
-      - name: Install production dependencies
-        run: npm ci --omit=dev
-
-      - name: Deploy application
+      - name: Display the artifact content
         run: |
-          pm2 delete node-app || true
-          pm2 start npm --name node-app -- start
-          pm2 save
+          echo "===== Test results from the test job ====="
+          cat test-results.txt
+
+      - name: Deploy the application (PM2)
+        run: |
+          chmod +x deploy.sh
+          ./deploy.sh
