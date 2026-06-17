@@ -48,7 +48,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────
   deploy:
     needs: test                 # dependency: deploy only runs if test succeeds
-    runs-on: self-hosted  # the 'ostad' label targets your runner
+    runs-on: [self-hosted, ostad]   # the 'ostad' label targets your runner
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -65,9 +65,5 @@ jobs:
 
       - name: Deploy the application (PM2)
         run: |
-          cd /home/ahnaf/DevOps/Module-03/Module-3-deployment
-          npm install
-          pm2 delete node-app || true
-          pm2 start "./src/server.js" --name node-app
-          pm2 save
-          npm start
+          chmod +x deploy.sh
+          ./deploy.sh
