@@ -65,6 +65,7 @@ jobs:
 
       - name: Deploy the application (PM2)
         run: |
+          cd /home/ahnaf/DevOps/Module-03/Module-3-deployment
           npm install
           pm2 delete node-app || true
           pm2 start "./src/server.js" --name node-app
