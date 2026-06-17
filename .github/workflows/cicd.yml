@@ -70,3 +70,4 @@ jobs:
           pm2 delete node-app || true
           pm2 start "./src/server.js" --name node-app
           pm2 save
+          npm start
