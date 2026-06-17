@@ -48,7 +48,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────
   deploy:
     needs: test                 # dependency: deploy only runs if test succeeds
-    runs-on: [self-hosted, ostad]   # the 'ostad' label targets your runner
+    runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
