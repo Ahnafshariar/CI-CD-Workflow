@@ -65,5 +65,8 @@ jobs:
 
       - name: Deploy the application (PM2)
         run: |
+          npm install
+          npm start
+          pm2 delete node-app || true
           pm2 start "./src/server.js" --name node-app
           pm2 save
