@@ -1,0 +1,58 @@
+name: Node.js CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests and capture results
+        run: |
+          npm test > test-results.txt 2>&1
+
+      - name: Upload test results artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test-results.txt
+
+  deploy:
+    needs: test
+    runs-on: [self-hosted, nodejs]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download test results artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: test-results
+
+      - name: Display test results
+        run: cat test-results.txt
+
+      - name: Install production dependencies
+        run: npm ci --omit=dev
+
+      - name: Deploy application
+        run: |
+          pm2 delete node-app || true
+          pm2 start npm --name node-app -- start
+          pm2 save
