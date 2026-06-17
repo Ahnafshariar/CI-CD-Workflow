@@ -65,5 +65,5 @@ jobs:
 
       - name: Deploy the application (PM2)
         run: |
-          chmod +x run.sh
-          ./run.sh
+          pm2 start "./src/server.js" --name node-app
+          pm2 save
